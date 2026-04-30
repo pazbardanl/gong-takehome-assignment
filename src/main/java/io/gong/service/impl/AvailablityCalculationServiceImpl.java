@@ -1,31 +1,29 @@
 package io.gong.service.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import io.gong.domain.AvailableSlot;
 import io.gong.domain.BusySlot;
 import io.gong.domain.MultiPersonBusySlot;
 import io.gong.repository.CalendarRepository;
 import io.gong.service.AvailabilityCalculationService;
-import org.apache.logging.log4j.LogManager;
 
+@Service
 public class AvailablityCalculationServiceImpl implements AvailabilityCalculationService {
-
-    private static final String DEFAULT_WORKDAY_PROPERTIES_RESOURCE = "io/gong/workday.properties";
 
     private static final Logger LOGGER = LogManager.getLogger(AvailablityCalculationServiceImpl.class);
 
@@ -33,43 +31,27 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
     private final LocalTime workdayStart;
     private final LocalTime workdayEnd;
 
-    public AvailablityCalculationServiceImpl(CalendarRepository calendarRepository) {
-        this(calendarRepository, DEFAULT_WORKDAY_PROPERTIES_RESOURCE);
-    }
+    @Autowired
     public AvailablityCalculationServiceImpl(
-            CalendarRepository calendarRepository, String workdayPropertiesClasspathResource) {
+            CalendarRepository calendarRepository,
+            @Value("${workday.start}") String workdayStart,
+            @Value("${workday.end}") String workdayEnd) {
+        this(
+                calendarRepository,
+                LocalTime.parse(workdayStart.trim()),
+                LocalTime.parse(workdayEnd.trim()));
+    }
+
+    /**
+     * Test and non-Spring callers: supplies workday bounds explicitly (same semantics as Spring-injected ctor).
+     */
+    public AvailablityCalculationServiceImpl(
+            CalendarRepository calendarRepository, LocalTime workdayStart, LocalTime workdayEnd) {
         this.calendarRepository = Objects.requireNonNull(calendarRepository, "calendarRepository");
-        Properties properties = loadClasspathProperties(workdayPropertiesClasspathResource);
-        this.workdayStart = parseRequiredLocalTime(properties, "workday.start");
-        this.workdayEnd = parseRequiredLocalTime(properties, "workday.end");
+        this.workdayStart = Objects.requireNonNull(workdayStart, "workdayStart");
+        this.workdayEnd = Objects.requireNonNull(workdayEnd, "workdayEnd");
         if (!workdayEnd.isAfter(workdayStart)) {
             throw new IllegalArgumentException("workdayEnd must be after workdayStart");
-        }
-    }
-
-    private static Properties loadClasspathProperties(String classpathResource) {
-        ClassLoader loader = AvailablityCalculationServiceImpl.class.getClassLoader();
-        try (InputStream stream = loader.getResourceAsStream(classpathResource)) {
-            if (stream == null) {
-                throw new IllegalStateException("Classpath resource not found: " + classpathResource);
-            }
-            Properties properties = new Properties();
-            properties.load(stream);
-            return properties;
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to read " + classpathResource, e);
-        }
-    }
-
-    private static LocalTime parseRequiredLocalTime(Properties properties, String key) {
-        String raw = properties.getProperty(key);
-        if (raw == null || raw.trim().isEmpty()) {
-            throw new IllegalStateException("Missing or empty property: " + key);
-        }
-        try {
-            return LocalTime.parse(raw.trim());
-        } catch (DateTimeParseException e) {
-            throw new IllegalStateException("Invalid LocalTime for property " + key + ": " + raw, e);
         }
     }
 

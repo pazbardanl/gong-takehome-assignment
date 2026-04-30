@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Repository;
+
 import io.gong.domain.BusySlot;
 import io.gong.repository.CalendarRepository;
 
+@Repository
 public class CalendarRepositoryInMemoryImpl implements CalendarRepository {
 
     private final Map<String, List<BusySlot>> personToBusySlots = new HashMap<>();

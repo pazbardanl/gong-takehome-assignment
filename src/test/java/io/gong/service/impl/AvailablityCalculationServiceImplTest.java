@@ -160,6 +160,6 @@ public class AvailablityCalculationServiceImplTest {
             List<String> attendees, List<BusySlot> busyReturnedByRepository) {
         CalendarRepository repository = mock(CalendarRepository.class);
         when(repository.getBusySlots(eq(attendees))).thenReturn(busyReturnedByRepository);
-        return new AvailablityCalculationServiceImpl(repository);
+        return new AvailablityCalculationServiceImpl(repository, LocalTime.of(7, 0), LocalTime.of(19, 0));
     }
 }

@@ -48,7 +48,8 @@ public class AvailablityCalculationFlowIntegrationTests {
         repository.storeBusySlots(allRows);
 
         List<String> attendees = Arrays.asList("Alice", "Jack");
-        AvailablityCalculationServiceImpl calculator = new AvailablityCalculationServiceImpl(repository);
+        AvailablityCalculationServiceImpl calculator =
+                new AvailablityCalculationServiceImpl(repository, LocalTime.of(7, 0), LocalTime.of(19, 0));
 
         List<AvailableSlot> actual =
                 calculator.findAvailableSlots(attendees, Duration.ofMinutes(60));
