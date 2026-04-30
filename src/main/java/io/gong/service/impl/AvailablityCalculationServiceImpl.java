@@ -16,11 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import io.gong.domain.AvailableSlot;
+import io.gong.contract.AvailabilityResponse;
+import io.gong.contract.AvailableSlot;
 import io.gong.domain.BusySlot;
 import io.gong.domain.MultiPersonBusySlot;
 import io.gong.repository.CalendarRepository;
 import io.gong.service.AvailabilityCalculationService;
+import io.gong.service.AvailabilityRecommendationsService;
 
 @Service
 public class AvailablityCalculationServiceImpl implements AvailabilityCalculationService {
@@ -28,26 +30,36 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
     private static final Logger LOGGER = LogManager.getLogger(AvailablityCalculationServiceImpl.class);
 
     private final CalendarRepository calendarRepository;
+    private final AvailabilityRecommendationsService availabilityRecommendationsService;
     private final LocalTime workdayStart;
     private final LocalTime workdayEnd;
 
     @Autowired
     public AvailablityCalculationServiceImpl(
             CalendarRepository calendarRepository,
+            AvailabilityRecommendationsService availabilityRecommendationsService,
             @Value("${workday.start}") String workdayStart,
             @Value("${workday.end}") String workdayEnd) {
         this(
                 calendarRepository,
+                availabilityRecommendationsService,
                 LocalTime.parse(workdayStart.trim()),
                 LocalTime.parse(workdayEnd.trim()));
     }
 
-    /**
-     * Test and non-Spring callers: supplies workday bounds explicitly (same semantics as Spring-injected ctor).
-     */
     public AvailablityCalculationServiceImpl(
             CalendarRepository calendarRepository, LocalTime workdayStart, LocalTime workdayEnd) {
+        this(calendarRepository, new AvailabilityRecommendationsServiceImpl(), workdayStart, workdayEnd);
+    }
+
+    private AvailablityCalculationServiceImpl(
+            CalendarRepository calendarRepository,
+            AvailabilityRecommendationsService availabilityRecommendationsService,
+            LocalTime workdayStart,
+            LocalTime workdayEnd) {
         this.calendarRepository = Objects.requireNonNull(calendarRepository, "calendarRepository");
+        this.availabilityRecommendationsService =
+                Objects.requireNonNull(availabilityRecommendationsService, "availabilityRecommendationsService");
         this.workdayStart = Objects.requireNonNull(workdayStart, "workdayStart");
         this.workdayEnd = Objects.requireNonNull(workdayEnd, "workdayEnd");
         if (!workdayEnd.isAfter(workdayStart)) {
@@ -56,7 +68,7 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
     }
 
     @Override
-    public List<AvailableSlot> findAvailableSlots(List<String> personList, Duration eventDuration) {
+    public AvailabilityResponse calculateAvailability(List<String> personList, Duration eventDuration) {
         List<BusySlot> busySlots = calendarRepository.getBusySlots(personList);
         LOGGER.debug("Busy slots: {}", busySlots);
         List<BusySlot> busySlotsSorted = sortBusySlots(busySlots);
@@ -67,7 +79,8 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
         LOGGER.debug("Merged available slots: {}", mergedAvailableSlots);
         List<AvailableSlot> eventDurationSlots = splitAvailableSlotsIntoEventDurationSlots(mergedAvailableSlots, eventDuration);
         LOGGER.debug("Event duration slots: {}", eventDurationSlots);
-        return eventDurationSlots;
+        List<String> recommendations = availabilityRecommendationsService.provideRecommendations(personList, mergedBusySlots);
+        return new AvailabilityResponse(eventDurationSlots, recommendations);
     }   
 
     private List<BusySlot> sortBusySlots(List<BusySlot> busySlots) {

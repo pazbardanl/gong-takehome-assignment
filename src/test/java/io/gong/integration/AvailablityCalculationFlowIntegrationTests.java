@@ -16,7 +16,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import io.gong.domain.AvailableSlot;
+import io.gong.contract.AvailableSlot;
 import io.gong.domain.BusySlot;
 import io.gong.repository.impl.CalendarRepositoryInMemoryImpl;
 import io.gong.service.impl.AvailablityCalculationServiceImpl;
@@ -52,7 +52,7 @@ public class AvailablityCalculationFlowIntegrationTests {
                 new AvailablityCalculationServiceImpl(repository, LocalTime.of(7, 0), LocalTime.of(19, 0));
 
         List<AvailableSlot> actual =
-                calculator.findAvailableSlots(attendees, Duration.ofMinutes(60));
+                calculator.calculateAvailability(attendees, Duration.ofMinutes(60)).availableSlots();
 
         List<AvailableSlot> expected =
                 Arrays.asList(

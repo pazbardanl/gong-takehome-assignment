@@ -1,4 +1,4 @@
-package io.gong.domain;
+package io.gong.contract;
 
 import java.time.Duration;
 import java.time.LocalTime;

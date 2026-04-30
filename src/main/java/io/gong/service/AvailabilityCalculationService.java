@@ -3,8 +3,8 @@ package io.gong.service;
 import java.time.Duration;
 import java.util.List;
 
-import io.gong.domain.AvailableSlot;
+import io.gong.contract.AvailabilityResponse;
 
 public interface AvailabilityCalculationService {
-    List<AvailableSlot> findAvailableSlots( List<String> personList, Duration eventDuration);
+    AvailabilityResponse calculateAvailability( List<String> personList, Duration eventDuration);
 }

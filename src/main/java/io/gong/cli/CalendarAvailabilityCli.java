@@ -5,7 +5,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.gong.domain.AvailableSlot;
+import io.gong.contract.AvailabilityResponse;
+import io.gong.contract.AvailableSlot;
 import io.gong.domain.BusySlot;
 import io.gong.repository.CalendarRepository;
 import io.gong.service.AvailabilityCalculationService;
@@ -40,17 +41,41 @@ public class CalendarAvailabilityCli {
         List<BusySlot> calendarRows = calendarDataProvider.getBusySlots(calendarPath);
         calendarRepository.storeBusySlots(calendarRows);
 
-        List<AvailableSlot> openSlots =
-                calculationService.findAvailableSlots(attendees, eventDuration);
+        AvailabilityResponse availabilityResponse = calculationService.calculateAvailability(attendees, eventDuration);
 
-        printOutput(attendees, eventDuration, openSlots);
+        List<AvailableSlot> openSlots = availabilityResponse.availableSlots();
+        List<String> recommendations = availabilityResponse.recommendations();
+
+        printOutput(attendees, eventDuration, openSlots, recommendations);
     }
 
-    private static void printOutput(
-            List<String> attendees, Duration eventDuration, List<AvailableSlot> openSlots) {
+    private static void printOutput(List<String> attendees, Duration eventDuration, List<AvailableSlot> openSlots, List<String> recommendations) {
+        printOpenSlots(attendees, eventDuration, openSlots);
+        System.out.println();
+        printRecommendations(recommendations);
+        System.out.println();
+    }
+
+
+    private static void printOpenSlots(List<String> attendees, Duration eventDuration, List<AvailableSlot> openSlots) {
         System.out.println("Available slots for " + attendees + " with duration " + eventDuration + ":");
-        for (AvailableSlot slot : openSlots) {
-            System.out.println("Available slot: " + SLOT_OUTPUT.format(slot.start()));
+        if (openSlots.isEmpty()) {
+            System.out.println("None");
+        } else {
+            for (AvailableSlot slot : openSlots) {
+                System.out.println("Available slot: " + SLOT_OUTPUT.format(slot.start()));
+            }
+        }
+    }
+
+    private static void printRecommendations(List<String> recommendations) {
+        System.out.println("Recommendations:");
+        if (recommendations.isEmpty()) {
+            System.out.println("None");
+        } else {
+            for (String recommendation : recommendations) {
+                System.out.println("Recommendation: " + recommendation);
+            }
         }
     }
 

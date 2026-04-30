@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import io.gong.domain.AvailableSlot;
+import io.gong.contract.AvailableSlot;
 import io.gong.domain.BusySlot;
 import io.gong.repository.CalendarRepository;
 
@@ -27,7 +27,8 @@ public class AvailablityCalculationServiceImplTest {
         List<String> attendees = Collections.singletonList("Pat");
         List<AvailableSlot> actual =
                 availabilityServiceFor(attendees, Collections.emptyList())
-                        .findAvailableSlots(attendees, Duration.ofMinutes(60));
+                        .calculateAvailability(attendees, Duration.ofMinutes(60))
+                        .availableSlots();
 
         List<AvailableSlot> expected = hourlyOneHourSlots(7, 18);
         assertEquals(expected, actual);
@@ -42,7 +43,9 @@ public class AvailablityCalculationServiceImplTest {
                         new BusySlot(LocalTime.of(7, 0), LocalTime.of(19, 0), "Pat", "Blocked"));
 
         List<AvailableSlot> actual =
-                availabilityServiceFor(attendees, blocking).findAvailableSlots(attendees, Duration.ofMinutes(60));
+                availabilityServiceFor(attendees, blocking)
+                        .calculateAvailability(attendees, Duration.ofMinutes(60))
+                        .availableSlots();
 
         assertTrue(actual.isEmpty());
     }
@@ -59,7 +62,8 @@ public class AvailablityCalculationServiceImplTest {
 
         List<AvailableSlot> actual =
                 availabilityServiceFor(attendees, blocking)
-                        .findAvailableSlots(attendees, Duration.ofMinutes(120));
+                        .calculateAvailability(attendees, Duration.ofMinutes(120))
+                        .availableSlots();
 
         assertEquals(
                 Arrays.asList(
@@ -82,7 +86,8 @@ public class AvailablityCalculationServiceImplTest {
 
         List<AvailableSlot> actual =
                 availabilityServiceFor(attendees, overlaps)
-                        .findAvailableSlots(attendees, Duration.ofMinutes(60));
+                        .calculateAvailability(attendees, Duration.ofMinutes(60))
+                        .availableSlots();
 
         assertEquals(hourlyOneHourExceptBlockedRange(10, 13), actual);
     }
@@ -98,7 +103,8 @@ public class AvailablityCalculationServiceImplTest {
 
         List<AvailableSlot> actual =
                 availabilityServiceFor(attendees, bothBusyTogether)
-                        .findAvailableSlots(attendees, Duration.ofMinutes(60));
+                        .calculateAvailability(attendees, Duration.ofMinutes(60))
+                        .availableSlots();
 
         assertEquals(hourlyOneHourExceptBlockedRange(10, 11), actual);
     }
@@ -118,7 +124,9 @@ public class AvailablityCalculationServiceImplTest {
         List<String> attendees = Arrays.asList("Alice", "Jack");
 
         List<AvailableSlot> actual =
-                availabilityServiceFor(attendees, readmeSlots).findAvailableSlots(attendees, Duration.ofMinutes(60));
+                availabilityServiceFor(attendees, readmeSlots)
+                        .calculateAvailability(attendees, Duration.ofMinutes(60))
+                        .availableSlots();
 
         List<AvailableSlot> expected =
                 Arrays.asList(
