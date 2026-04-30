@@ -142,6 +142,40 @@ public class AvailablityCalculationServiceImplTest {
         assertEquals(expected, actual);
     }
 
+    @Test(expected = NullPointerException.class)
+    public void calculateAvailability_nullPersonList_throwsNullPointerException() {
+        calculatorWithBareMockRepository().calculateAvailability(null, Duration.ofMinutes(60));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void calculateAvailability_nullEventDuration_throwsNullPointerException() {
+        calculatorWithBareMockRepository()
+                .calculateAvailability(Collections.singletonList("Pat"), null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void calculateAvailability_emptyPersonList_throwsIllegalArgumentException() {
+        calculatorWithBareMockRepository().calculateAvailability(Collections.emptyList(), Duration.ofMinutes(60));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void calculateAvailability_personListContainingNull_throwsIllegalArgumentException() {
+        calculatorWithBareMockRepository()
+                .calculateAvailability(Arrays.asList("Ada", null, "Ben"), Duration.ofMinutes(60));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void calculateAvailability_nonPositiveDuration_throwsIllegalArgumentException() {
+        calculatorWithBareMockRepository()
+                .calculateAvailability(Collections.singletonList("Pat"), Duration.ZERO);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void calculateAvailability_negativeDuration_throwsIllegalArgumentException() {
+        calculatorWithBareMockRepository()
+                .calculateAvailability(Collections.singletonList("Pat"), Duration.ofMinutes(-1));
+    }
+
     /** One-hour slots at each clock hour whose full [hour, hour+1) lies in [07:00, 19:00] workday gaps. */
     private static List<AvailableSlot> hourlyOneHourSlots(int firstHourInclusive, int lastHourInclusive) {
         List<AvailableSlot> slots = new ArrayList<>();
@@ -162,6 +196,11 @@ public class AvailablityCalculationServiceImplTest {
             slots.add(new AvailableSlot(LocalTime.of(h, 0), LocalTime.of(h + 1, 0)));
         }
         return slots;
+    }
+
+    private static AvailablityCalculationServiceImpl calculatorWithBareMockRepository() {
+        return new AvailablityCalculationServiceImpl(
+                mock(CalendarRepository.class), LocalTime.of(7, 0), LocalTime.of(19, 0));
     }
 
     private static AvailablityCalculationServiceImpl availabilityServiceFor(

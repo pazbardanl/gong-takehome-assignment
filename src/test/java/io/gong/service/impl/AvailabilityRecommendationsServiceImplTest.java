@@ -63,7 +63,7 @@ public class AvailabilityRecommendationsServiceImplTest {
                         new MultiPersonBusySlot(Set.of("Ada"), LocalTime.of(14, 0), LocalTime.of(15, 0)));
 
         assertEquals(
-                Collections.singletonList("Open slot at 14:00 without Ada"),
+                Collections.singletonList("Availability at 14:00 to 15:00 without Ada"),
                 service.provideRecommendations(people, busy));
     }
 
@@ -77,7 +77,7 @@ public class AvailabilityRecommendationsServiceImplTest {
 
         List<String> actual = service.provideRecommendations(people, busy);
 
-        assertEquals(Collections.singletonList("Open slot at 09:00 without Ben"), actual);
+        assertEquals(Collections.singletonList("Availability at 09:00 to 10:00 without Ben"), actual);
     }
 
     @Test
@@ -89,7 +89,9 @@ public class AvailabilityRecommendationsServiceImplTest {
                         new MultiPersonBusySlot(Set.of("Cara"), LocalTime.of(16, 0), LocalTime.of(17, 0)));
 
         assertEquals(
-                Arrays.asList("Open slot at 08:00 without Ada", "Open slot at 16:00 without Cara"),
+                Arrays.asList(
+                        "Availability at 08:00 to 09:00 without Ada",
+                        "Availability at 16:00 to 17:00 without Cara"),
                 service.provideRecommendations(people, busy));
     }
 }

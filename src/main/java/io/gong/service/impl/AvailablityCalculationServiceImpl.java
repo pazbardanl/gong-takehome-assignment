@@ -69,6 +69,7 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
 
     @Override
     public AvailabilityResponse calculateAvailability(List<String> personList, Duration eventDuration) {
+        validateAvailabilityRequest(personList, eventDuration);
         List<BusySlot> busySlots = calendarRepository.getBusySlots(personList);
         LOGGER.debug("Busy slots: {}", busySlots);
         List<BusySlot> busySlotsSorted = sortBusySlots(busySlots);
@@ -81,7 +82,23 @@ public class AvailablityCalculationServiceImpl implements AvailabilityCalculatio
         LOGGER.debug("Event duration slots: {}", eventDurationSlots);
         List<String> recommendations = availabilityRecommendationsService.provideRecommendations(personList, mergedBusySlots);
         return new AvailabilityResponse(eventDurationSlots, recommendations);
-    }   
+    }
+
+    private static void validateAvailabilityRequest(List<String> personList, Duration eventDuration) {
+        Objects.requireNonNull(personList, "personList");
+        Objects.requireNonNull(eventDuration, "eventDuration");
+        if (personList.isEmpty()) {
+            throw new IllegalArgumentException("personList must not be empty");
+        }
+        if (personList.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("personList must not contain null entries");
+        }
+        if (eventDuration.isZero() || eventDuration.isNegative()) {
+            throw new IllegalArgumentException(
+                    "eventDuration must be positive, got seconds=" + eventDuration.getSeconds()
+                            + ", nanos=" + eventDuration.getNano());
+        }
+    }
 
     private List<BusySlot> sortBusySlots(List<BusySlot> busySlots) {
         return busySlots.stream()

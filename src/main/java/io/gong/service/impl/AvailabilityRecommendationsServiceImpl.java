@@ -26,7 +26,7 @@ public class AvailabilityRecommendationsServiceImpl implements AvailabilityRecom
         }
         multiPersonBusySlots.stream().forEach(multiPersonBusySlot -> {
             if (multiPersonBusySlot.persons().size() == 1) {
-                recommendations.add("Open slot at " + multiPersonBusySlot.start() + " without " + multiPersonBusySlot.persons().iterator().next());
+                recommendations.add("Availability at " + multiPersonBusySlot.start() + " to " + multiPersonBusySlot.end() + " without " + multiPersonBusySlot.persons().iterator().next());
             }
         });
         return recommendations;
