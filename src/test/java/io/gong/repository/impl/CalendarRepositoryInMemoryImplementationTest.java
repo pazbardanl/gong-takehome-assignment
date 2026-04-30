@@ -15,11 +15,11 @@ import io.gong.domain.BusySlot;
 
 public class CalendarRepositoryInMemoryImplementationTest {
 
-    private CalendarRepositoryInMemoryImplementation repository;
+    private CalendarRepositoryInMemoryImpl repository;
 
     @Before
     public void setUp() {
-        repository = new CalendarRepositoryInMemoryImplementation();
+        repository = new CalendarRepositoryInMemoryImpl();
     }
 
     @Test

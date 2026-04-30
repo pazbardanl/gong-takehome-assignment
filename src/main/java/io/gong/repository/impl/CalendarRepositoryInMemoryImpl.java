@@ -8,7 +8,7 @@ import java.util.Map;
 import io.gong.domain.BusySlot;
 import io.gong.repository.CalendarRepository;
 
-public class CalendarRepositoryInMemoryImplementation implements CalendarRepository {
+public class CalendarRepositoryInMemoryImpl implements CalendarRepository {
 
     private final Map<String, List<BusySlot>> personToBusySlots = new HashMap<>();
 
